@@ -52,6 +52,7 @@ void loop() {
   int stack[7];   // max 7 LEDs (pins 2–8)
   int top = 0;    // stack pointer
 
+  delay(1000);
   // Entrance (push LEDs one by one)
   for(int p = right; p >= left; p--){
     runAnimation(false, stack, top, p);   // sweep before push, keep new LED ON
@@ -60,7 +61,7 @@ void loop() {
     delay(100);
   }
 
-  delay(1000);
+  delay(500);
 
   // Exit (pop LEDs one by one)
   while(top > 0){
