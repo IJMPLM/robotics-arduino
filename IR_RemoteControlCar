@@ -1,0 +1,132 @@
+#include <IRremote.hpp>
+
+// Motor driver pins (PWM ~ capable)
+const int motorLeftForward  = 6;  // In3
+const int motorLeftBackward = 9;  // In4
+const int motorRightForward = 3;  // In1
+const int motorRightBackward = 5; // In2
+
+// IR receiver pin
+const int irPin = 10;
+
+// Hex codes
+const uint16_t CODE_1 = 0x45; // Forward Left
+const uint16_t CODE_2 = 0x46; // Forward
+const uint16_t CODE_3 = 0x47; // Forward Right
+const uint16_t CODE_4 = 0x44; // Rotate Counter Clockwise
+const uint16_t CODE_5 = 0x40; // Stop
+const uint16_t CODE_6 = 0x43; // Rotate Clockwise
+const uint16_t CODE_7 = 0x07; // Back Left
+const uint16_t CODE_8 = 0x15; // Backward
+const uint16_t CODE_9 = 0x09; // Back Right
+
+// Timing variables for "Auto-Stop"
+unsigned long lastSignalTime = 0;
+const unsigned long TIMEOUT_MS = 200; // Stop car if no signal for 200ms
+
+void setup() {
+  Serial.begin(9600); // Higher baud rate for faster logging/debugging
+  
+  pinMode(motorLeftForward, OUTPUT);
+  pinMode(motorLeftBackward, OUTPUT);
+  pinMode(motorRightForward, OUTPUT);
+  pinMode(motorRightBackward, OUTPUT);
+
+  IrReceiver.begin(irPin, ENABLE_LED_FEEDBACK); 
+  Serial.println("System Online - Fast Response Mode");
+}
+
+// --- Movement Functions ---
+
+void stopCar() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void moveForward() {
+  digitalWrite(motorLeftForward, HIGH);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, HIGH);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void moveBackward() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, HIGH);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, HIGH);
+}
+
+void turnLeft() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, HIGH);
+  digitalWrite(motorRightForward, HIGH);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void turnRight() {
+  digitalWrite(motorLeftForward, HIGH);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, HIGH);
+}
+
+void forwardLeft() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, HIGH);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void forwardRight() {
+  digitalWrite(motorLeftForward, HIGH);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void backwardLeft() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, HIGH);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, LOW);
+}
+
+void backwardRight() {
+  digitalWrite(motorLeftForward, LOW);
+  digitalWrite(motorLeftBackward, LOW);
+  digitalWrite(motorRightForward, LOW);
+  digitalWrite(motorRightBackward, HIGH);
+}
+
+void loop() {
+  // 1. Check for incoming IR signals
+  if (IrReceiver.decode()) {
+    uint16_t command = IrReceiver.decodedIRData.command;
+
+    // If it's a valid command (not 0), update movement and reset timer
+    if (command != 0) {
+      lastSignalTime = millis(); // Reset the "Live" timer
+
+      switch (command) {
+        case CODE_1: forwardLeft();   break;
+        case CODE_2: moveForward();    break;
+        case CODE_3: forwardRight();  break;
+        case CODE_4: turnLeft();      break;
+        case CODE_5: stopCar();       break;
+        case CODE_6: turnRight();     break;
+        case CODE_7: backwardLeft();  break;
+        case CODE_8: moveBackward();  break;
+        case CODE_9: backwardRight(); break;
+      }
+    }
+    IrReceiver.resume(); 
+  }
+
+  // 2. Auto-Stop Logic: If current time minus last signal time exceeds timeout
+  if (millis() - lastSignalTime > TIMEOUT_MS) {
+    stopCar();
+  }
+}
