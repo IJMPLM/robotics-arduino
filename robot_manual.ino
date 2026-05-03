@@ -1,9 +1,9 @@
 #include <Servo.h>
 
 // --- SERVO PINS ---
-#define BASE_PIN 13
-#define JOINT1_PIN 12
-#define CLAMP_PIN 10
+#define BASE_PIN 10
+#define JOINT1_PIN 9
+#define CLAMP_PIN 8
 
 // --- SERVO OBJECTS ---
 Servo baseServo;
@@ -11,12 +11,12 @@ Servo joint1Servo;
 Servo clampServo;
 
 // --- CURRENT POSITIONS ---
-int basePos = 90;
-int j1Pos = 90;
+int basePos = 0;
+int j1Pos = 0;
 int clampPos = 0;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(9600);150
 
   // Attach servos to pins
   baseServo.attach(BASE_PIN);
